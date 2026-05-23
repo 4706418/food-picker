@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#E8521E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<title>今天吃什么</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<style>
+  @font-face {
+    font-family: 'ZCOOL';
+    src: local('ZCOOL KuaiLe');
+  }
+  :root{
+    --bg1:#2A0E07;
+    --bg2:#5A1B0A;
+    --paper:#FFF4E2;
+    --orange:#E8521E;
+    --orange-d:#C13D11;
+    --gold:#F2A93B;
+    --cream:#FFE7C2;
+    --ink:#3A1B0C;
+    --green:#5B7A3A;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;overflow:hidden;}
+  body{
+    font-family:'ZCOOL KuaiLe','PingFang SC','Microsoft YaHei',sans-serif;
+    background:
+      radial-gradient(circle at 50% 0%, #6E2410 0%, transparent 60%),
+      linear-gradient(170deg, var(--bg2) 0%, var(--bg1) 100%);
+    color:var(--paper);
+    display:flex;flex-direction:column;
+    height:100dvh;
+    user-select:none;-webkit-user-select:none;
+    position:relative;
+  }
+  /* grain texture */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+  .wrap{position:relative;z-index:1;display:flex;flex-direction:column;height:100%;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom);}
+
+  /* ---------- header ---------- */
+  header{
+    text-align:center;padding:22px 20px 6px;flex-shrink:0;
+  }
+  .kicker{
+    font-size:13px;letter-spacing:6px;color:var(--gold);
+    opacity:.85;margin-bottom:4px;
+  }
+  h1{
+    font-size:40px;line-height:1.1;color:var(--cream);
+    text-shadow:0 3px 0 var(--orange-d), 0 6px 14px rgba(0,0,0,.5);
+  }
+  h1 .em{color:var(--gold);}
+  .steam{
+    display:flex;justify-content:center;gap:6px;margin-top:2px;height:18px;
+  }
+  .steam span{
+    width:5px;height:14px;border-radius:3px;
+    background:linear-gradient(var(--gold),transparent);
+    opacity:.6;animation:steam 2.4s ease-in-out infinite;
+  }
+  .steam span:nth-child(2){animation-delay:.5s;}
+  .steam span:nth-child(3){animation-delay:1s;}
+  @keyframes steam{
+    0%,100%{transform:translateY(2px) scaleY(.7);opacity:.2;}
+    50%{transform:translateY(-6px) scaleY(1.1);opacity:.7;}
+  }
+
+  /* ---------- machine / reel ---------- */
+  .stage{
+    flex:1;display:flex;flex-direction:column;align-items:center;
+    justify-content:center;padding:8px 24px;min-height:0;
+  }
+  .machine{
+    width:100%;max-width:380px;
+    background:linear-gradient(160deg,#FFF9EF,#FFE9C8);
+    border-radius:30px;
+    padding:14px;
+    box-shadow:
+      0 0 0 5px var(--orange),
+      0 0 0 11px var(--orange-d),
+      0 22px 40px rgba(0,0,0,.55),
+      inset 0 2px 6px rgba(255,255,255,.9);
+    position:relative;
+  }
+  .machine::before,.machine::after{
+    content:"";position:absolute;width:16px;height:16px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,#FFF,var(--gold));
+    box-shadow:0 0 8px var(--gold);top:50%;transform:translateY(-50%);
+  }
+  .machine::before{left:-25px;}
+  .machine::after{right:-25px;}
+
+  .window{
+    position:relative;height:160px;border-radius:18px;overflow:hidden;
+    background:linear-gradient(var(--ink),#5a3414);
+    box-shadow:inset 0 8px 18px rgba(0,0,0,.7),inset 0 -8px 18px rgba(0,0,0,.7);
+  }
+  .reel{
+    position:absolute;left:0;right:0;top:0;
+    display:flex;flex-direction:column;align-items:center;
+    will-change:transform;
+  }
+  .slot{
+    height:160px;flex-shrink:0;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;gap:6px;width:100%;
+  }
+  .slot .emoji{font-size:62px;line-height:1;
+    filter:drop-shadow(0 6px 8px rgba(0,0,0,.5));}
+  .slot .name{font-size:30px;color:var(--cream);
+    text-shadow:0 2px 4px rgba(0,0,0,.6);}
+  /* selection frame lines */
+  .window::before,.window::after{
+    content:"";position:absolute;left:8px;right:8px;height:3px;
+    background:linear-gradient(90deg,transparent,var(--gold),transparent);
+    z-index:3;opacity:.9;
+  }
+  .window::before{top:14px;}
+  .window::after{bottom:14px;}
+  .glare{
+    position:absolute;inset:0;z-index:2;pointer-events:none;
+    background:linear-gradient(115deg,rgba(255,255,255,.16) 0%,transparent 35%,transparent 70%,rgba(255,255,255,.08) 100%);
+  }
+
+  .result-tag{
+    margin-top:14px;text-align:center;min-height:46px;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+  }
+  .result-tag .lead{font-size:14px;color:var(--orange-d);letter-spacing:2px;}
+  .result-tag .desc{font-size:15px;color:#7a4a22;margin-top:2px;padding:0 8px;line-height:1.4;}
+  .result-tag.pop{animation:pop .5s cubic-bezier(.2,1.4,.4,1);}
+  @keyframes pop{0%{transform:scale(.6);opacity:0;}100%{transform:scale(1);opacity:1;}}
+
+  /* ---------- big button ---------- */
+  .controls{flex-shrink:0;padding:6px 24px 20px;text-align:center;}
+  .go{
+    width:100%;max-width:380px;border:none;cursor:pointer;
+    font-family:inherit;font-size:26px;color:#fff;
+    padding:18px 0;border-radius:22px;letter-spacing:3px;
+    background:linear-gradient(180deg,var(--gold) 0%,var(--orange) 55%,var(--orange-d) 100%);
+    box-shadow:0 8px 0 #8e2c0b,0 14px 22px rgba(0,0,0,.5),inset 0 2px 4px rgba(255,255,255,.5);
+    transition:transform .08s,box-shadow .08s;
+    text-shadow:0 2px 3px rgba(0,0,0,.35);
+  }
+  .go:active{transform:translateY(6px);box-shadow:0 2px 0 #8e2c0b,0 6px 12px rgba(0,0,0,.5),inset 0 2px 4px rgba(255,255,255,.5);}
+  .go:disabled{filter:saturate(.5) brightness(.9);}
+  .hint{margin-top:10px;font-size:12px;color:var(--gold);opacity:.7;letter-spacing:1px;}
+
+  .edit-btn{
+    position:absolute;top:calc(env(safe-area-inset-top) + 14px);right:16px;
+    width:42px;height:42px;border-radius:50%;border:2px solid var(--gold);
+    background:rgba(0,0,0,.25);color:var(--gold);font-size:20px;
+    cursor:pointer;z-index:5;display:flex;align-items:center;justify-content:center;
+  }
+  .edit-btn:active{transform:scale(.9);}
+
+  /* ---------- modal ---------- */
+  .mask{
+    position:fixed;inset:0;z-index:20;background:rgba(20,5,2,.78);
+    backdrop-filter:blur(4px);display:none;
+    align-items:flex-end;
+  }
+  .mask.show{display:flex;animation:fade .2s;}
+  @keyframes fade{from{opacity:0;}to{opacity:1;}}
+  .sheet{
+    width:100%;background:var(--paper);color:var(--ink);
+    border-radius:26px 26px 0 0;padding:20px 20px calc(env(safe-area-inset-bottom) + 20px);
+    max-height:82vh;display:flex;flex-direction:column;
+    box-shadow:0 -10px 40px rgba(0,0,0,.6);
+    animation:slideUp .28s cubic-bezier(.2,.9,.3,1);
+  }
+  @keyframes slideUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
+  .sheet h2{font-size:24px;color:var(--orange-d);text-align:center;margin-bottom:4px;}
+  .sheet .sub{text-align:center;font-size:12px;color:#9a6a3a;margin-bottom:14px;}
+  .add-row{display:flex;gap:8px;margin-bottom:14px;}
+  .add-row input{
+    flex:1;font-family:inherit;font-size:17px;padding:12px 14px;
+    border:2px solid var(--gold);border-radius:14px;background:#fff;color:var(--ink);
+    outline:none;
+  }
+  .add-row input:focus{border-color:var(--orange);}
+  .add-row button{
+    border:none;background:var(--orange);color:#fff;font-family:inherit;
+    font-size:18px;padding:0 20px;border-radius:14px;cursor:pointer;
+  }
+  .add-row button:active{transform:scale(.94);}
+  .list{overflow-y:auto;-webkit-overflow-scrolling:touch;flex:1;}
+  .item{
+    display:flex;align-items:center;gap:10px;
+    background:#fff;border:1.5px solid #F0DCBE;border-radius:14px;
+    padding:10px 12px;margin-bottom:8px;
+  }
+  .item .em{font-size:26px;width:34px;text-align:center;}
+  .item .nm{flex:1;font-size:18px;}
+  .item .del{
+    border:none;background:#FBE3DC;color:var(--orange-d);
+    width:34px;height:34px;border-radius:10px;font-size:18px;cursor:pointer;
+  }
+  .item .del:active{transform:scale(.9);}
+  .empty{text-align:center;color:#b08a5e;padding:30px 0;font-size:15px;}
+  .close{
+    margin-top:12px;width:100%;border:none;font-family:inherit;font-size:18px;
+    padding:14px;border-radius:16px;background:var(--ink);color:var(--cream);cursor:pointer;
+  }
+  .toast{
+    position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);
+    background:var(--ink);color:var(--cream);padding:10px 20px;border-radius:20px;
+    font-size:14px;opacity:0;transition:.25s;z-index:30;pointer-events:none;
+    box-shadow:0 6px 20px rgba(0,0,0,.5);
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <button class="edit-btn" id="editBtn" aria-label="编辑菜单">✎</button>
+
+  <header>
+    <div class="kicker">FOOD ROULETTE</div>
+    <h1>今天吃<span class="em">什么</span></h1>
+    <div class="steam"><span></span><span></span><span></span></div>
+  </header>
+
+  <div class="stage">
+    <div class="machine">
+      <div class="window">
+        <div class="reel" id="reel"></div>
+        <div class="glare"></div>
+      </div>
+    </div>
+    <div class="result-tag" id="resultTag">
+      <div class="lead">按下按钮，让命运选餐 🍜</div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button class="go" id="goBtn">开 始 抽 餐</button>
+    <div class="hint" id="hint">右上角 ✎ 可增减美食</div>
+  </div>
+</div>
+
+<!-- edit modal -->
+<div class="mask" id="mask">
+  <div class="sheet">
+    <h2>我的美食清单</h2>
+    <div class="sub">添加或删除，随机池会立即更新</div>
+    <div class="add-row">
+      <input type="text" id="newFood" placeholder="输入新美食名称…" maxlength="12">
+      <button id="addBtn">添加</button>
+    </div>
+    <div class="list" id="foodList"></div>
+    <button class="close" id="closeBtn">完成</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------- 默认美食 + emoji 猜测 ---------- */
+const DEFAULTS = [
+  "凉皮","饺子","肠粉","生煎包","酒酿","地锅鸡","鸡公煲",
+  "包子","巴斯克","沙县","淮南牛肉汤","豆腐脑","乳酪饼干"
+];
+/* 关键词 -> emoji + 一句小介绍 */
+const INFO = {
+  "凉皮":["🍜","陕西经典，筋道爽滑，配辣油黄瓜，夏天的快乐。"],
+  "饺子":["🥟","皮薄馅大，蘸点醋，咬一口满满幸福。"],
+  "肠粉":["🍥","广式米皮嫩滑，淋上酱油，一口一个鲜。"],
+  "生煎包":["🥟","底部焦脆，咬开爆汁，上海人的早餐之光。"],
+  "酒酿":["🍶","甜糯微醺，做成圆子或汤，暖胃又暖心。"],
+  "地锅鸡":["🍲","锅边贴饼，鸡肉入味，徐州人的硬核大菜。"],
+  "鸡公煲":["🍲","麻辣鲜香，连汤带料，越煮越下饭。"],
+  "包子":["🥯","松软多汁，一笼热气腾腾，万能的选择。"],
+  "巴斯克":["🍰","焦香芝士蛋糕，外裂内绵，甜品控狂喜。"],
+  "沙县":["🍲","拌面+蒸饺+炖汤，国民食堂永远不出错。"],
+  "淮南牛肉汤":["🍲","汤鲜牛肉嫩，配粉丝豆饼，一碗下肚通透。"],
+  "豆腐脑":["🥣","嫩如凝脂，咸甜随你，温柔的早餐拥抱。"],
+  "乳酪饼干":["🍪","酥脆奶香，配杯热茶，午后小确幸。"]
+};
+function guessEmoji(name){
+  if(INFO[name]) return INFO[name][0];
+  if(/蛋糕|巴斯克|布丁|甜/.test(name)) return "🍰";
+  if(/饼干|曲奇/.test(name)) return "🍪";
+  if(/面|粉/.test(name)) return "🍜";
+  if(/饺|包/.test(name)) return "🥟";
+  if(/汤|煲|锅/.test(name)) return "🍲";
+  if(/饭|盖浇/.test(name)) return "🍚";
+  if(/粥|脑|酿/.test(name)) return "🥣";
+  if(/鸡|肉/.test(name)) return "🍗";
+  if(/鱼|虾|海/.test(name)) return "🦐";
+  if(/茶|奶|咖啡/.test(name)) return "🥤";
+  if(/果|沙拉/.test(name)) return "🥗";
+  return "🍴";
+}
+function descOf(name){
+  return INFO[name] ? INFO[name][1] : "随机选中，就是它啦，快去享用吧！";
+}
+
+/* ---------- 数据持久化 ---------- */
+const KEY="foodpicker.list.v1";
+let foods=[];
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    foods = raw ? JSON.parse(raw) : DEFAULTS.slice();
+  }catch(e){ foods=DEFAULTS.slice(); }
+  if(!Array.isArray(foods)||!foods.length) foods=DEFAULTS.slice();
+}
+function save(){
+  try{ localStorage.setItem(KEY,JSON.stringify(foods)); }catch(e){}
+}
+
+/* ---------- DOM ---------- */
+const reel=document.getElementById('reel');
+const goBtn=document.getElementById('goBtn');
+const resultTag=document.getElementById('resultTag');
+const mask=document.getElementById('mask');
+const foodList=document.getElementById('foodList');
+const toast=document.getElementById('toast');
+const SLOT_H=160;
+
+function makeSlot(name){
+  const d=document.createElement('div');
+  d.className='slot';
+  d.innerHTML=`<div class="emoji">${guessEmoji(name)}</div><div class="name">${name}</div>`;
+  return d;
+}
+
+let current=0; // index currently centered
+function renderReelInitial(){
+  reel.innerHTML='';
+  reel.style.transition='none';
+  reel.style.transform='translateY(0)';
+  current=0;
+  reel.appendChild(makeSlot(foods[0]||"添加美食"));
+}
+
+let spinning=false;
+function spin(){
+  if(spinning) return;
+  if(foods.length===0){ showToast("先去添加几样美食吧～"); return; }
+  spinning=true;
+  goBtn.disabled=true;
+  resultTag.classList.remove('pop');
+  resultTag.innerHTML='<div class="lead">命运转动中…🎰</div>';
+
+  const target=Math.floor(Math.random()*foods.length);
+  // build a long strip: many random slots then end on target
+  const loops = 4*foods.length + Math.floor(Math.random()*foods.length) + 12;
+  const strip=[];
+  for(let i=0;i<loops;i++){
+    strip.push(foods[Math.floor(Math.random()*foods.length)]);
+  }
+  strip.push(foods[target]); // final centered slot
+
+  reel.innerHTML='';
+  reel.style.transition='none';
+  reel.style.transform='translateY(0)';
+  strip.forEach(n=>reel.appendChild(makeSlot(n)));
+
+  const dist=(strip.length-1)*SLOT_H;
+  // force reflow
+  void reel.offsetHeight;
+  reel.style.transition='transform 3.6s cubic-bezier(.12,.62,.18,1)';
+  reel.style.transform=`translateY(-${dist}px)`;
+
+  let ticks=0;
+  const tickTimer=setInterval(()=>{ if(navigator.vibrate) navigator.vibrate(8); ticks++; if(ticks>14) clearInterval(tickTimer); },210);
+
+  reel.addEventListener('transitionend',function done(){
+    reel.removeEventListener('transitionend',done);
+    clearInterval(tickTimer);
+    spinning=false;
+    goBtn.disabled=false;
+    const name=foods[target];
+    if(navigator.vibrate) navigator.vibrate([30,40,90]);
+    resultTag.innerHTML=
+      `<div class="lead">就吃 · ${name} ·</div>
+       <div class="desc">${descOf(name)}</div>`;
+    resultTag.classList.add('pop');
+  });
+}
+
+/* ---------- edit modal ---------- */
+function renderList(){
+  foodList.innerHTML='';
+  if(foods.length===0){
+    foodList.innerHTML='<div class="empty">清单空空，添加你的第一样美食吧 🍽️</div>';
+    return;
+  }
+  foods.forEach((name,i)=>{
+    const row=document.createElement('div');
+    row.className='item';
+    row.innerHTML=
+      `<div class="em">${guessEmoji(name)}</div>
+       <div class="nm">${name}</div>
+       <button class="del" data-i="${i}" aria-label="删除">✕</button>`;
+    foodList.appendChild(row);
+  });
+}
+function addFood(){
+  const inp=document.getElementById('newFood');
+  const v=inp.value.trim();
+  if(!v){ showToast("名称不能为空哦"); return; }
+  if(foods.includes(v)){ showToast("已经有这道啦"); return; }
+  foods.push(v);
+  save(); renderList(); renderReelInitial();
+  inp.value='';
+  showToast("已添加 "+v);
+}
+foodList.addEventListener('click',e=>{
+  const b=e.target.closest('.del');
+  if(!b) return;
+  const i=+b.dataset.i;
+  const removed=foods.splice(i,1)[0];
+  save(); renderList(); renderReelInitial();
+  showToast("已删除 "+removed);
+});
+
+let toastTimer;
+function showToast(msg){
+  toast.textContent=msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>toast.classList.remove('show'),1600);
+}
+
+/* ---------- events ---------- */
+goBtn.addEventListener('click',spin);
+document.getElementById('editBtn').addEventListener('click',()=>{
+  renderList(); mask.classList.add('show');
+});
+document.getElementById('closeBtn').addEventListener('click',()=>mask.classList.remove('show'));
+document.getElementById('addBtn').addEventListener('click',addFood);
+document.getElementById('newFood').addEventListener('keydown',e=>{ if(e.key==='Enter') addFood(); });
+mask.addEventListener('click',e=>{ if(e.target===mask) mask.classList.remove('show'); });
+
+/* ---------- init ---------- */
+load();
+renderReelInitial();
+
+/* service worker for offline */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
